@@ -1070,6 +1070,28 @@ ne.responder['file-loaded'] = function(self)
 		end
 		return false
 	end
+	
+local thumbfast = {
+    width = 0,
+    height = 0,
+    disabled = true,
+    available = false
+}
+mp.register_script_message("thumbfast-info", function(json)
+    local data = utils.parse_json(json)
+    if type(data) ~= "table" or not data.width or not data.height then
+        msg.error("thumbfast-info: received json didn't produce a table with thumbnail information")
+    else
+        thumbfast = data
+    end
+end)
+
+ne.responder['mouse_leave']=function(self,pos)
+	tooltip:hide(self)
+	if thumbfast.available then
+		mp.commandv("script-message-to", "thumbfast", "clear")
+	end
+end	
 ne.responder['mouse_move'] = function(self, pos)
 		local seekTo = self:getValueAt(pos)
 		if self.allowDrag then
@@ -1079,6 +1101,17 @@ ne.responder['mouse_move'] = function(self, pos)
 			local tipText
 			if player.duration then
 				local seconds = seekTo/100 * player.duration
+
+				if not thumbfast.disabled then
+					mp.commandv("script-message-to", "thumbfast", "thumb",
+						-- hovered time in seconds
+						seconds,
+						-- x
+						pos[1]-thumbfast.width/2,
+						-- y
+						self.geo.y-thumbfast.height-20
+					)
+				end
 				if #player.chapters > 0 then
 					local ch = #player.chapters
 					for i, v in ipairs(player.chapters) do
@@ -1106,6 +1139,9 @@ ne.responder['mouse_move'] = function(self, pos)
 			tooltip:show(tipText, {pos[1], self.geo.y}, self)
 		else
 			tooltip:hide(self)
+			if thumbfast.available then
+				mp.commandv("script-message-to", "thumbfast", "clear")
+			end
 		end
 		return false
 	end
