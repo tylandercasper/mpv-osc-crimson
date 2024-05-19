@@ -1103,11 +1103,14 @@ ne.responder['mouse_move'] = function(self, pos)
 				local seconds = seekTo/100 * player.duration
 
 				if not thumbfast.disabled then
+					local margin_right,margin_right=10,10
+					local display_width = mp.get_property_number("osd-width")
+
 					mp.commandv("script-message-to", "thumbfast", "thumb",
 						-- hovered time in seconds
 						seconds,
 						-- x
-						pos[1]-thumbfast.width/2,
+						math.min(display_width - thumbfast.width - margin_right, math.max(margin_right, pos[1] - thumbfast.width / 2)),
 						-- y
 						self.geo.y-thumbfast.height-20
 					)
